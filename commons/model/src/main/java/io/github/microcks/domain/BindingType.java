@@ -27,5 +27,6 @@ public enum BindingType {
    MQTT,
    WS,
    AMQP,
+   SQS,
    AMQP1
 }

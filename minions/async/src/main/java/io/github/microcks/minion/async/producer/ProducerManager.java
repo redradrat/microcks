@@ -46,8 +46,8 @@ import java.util.Set;
 @Unremovable
 @ApplicationScoped
 /**
- * ProducerManager is the responsible for emitting mock event messages when specific frequency triggered is reached. 
- * Need to specify it as @Unremovable to avoid Quarkus ARC optimization removing beans that are not injected elsewhere 
+ * ProducerManager is the responsible for emitting mock event messages when specific frequency triggered is reached.
+ * Need to specify it as @Unremovable to avoid Quarkus ARC optimization removing beans that are not injected elsewhere
  * (this one is resolved using Arc.container().instance() method from ProducerScheduler).
  * @author laurent
  */
@@ -72,6 +72,9 @@ public class ProducerManager {
    AMQPProducerManager amqpProducerManager;
 
    @Inject
+   SQSProducerManager sqsProducerManager;
+
+  @Inject
    @RootWebSocketProducerManager
    WebSocketProducerManager wsProducerManager;
 
@@ -152,6 +155,13 @@ public class ProducerManager {
                         amqpProducerManager.publishMessage(bindingDef.getDestinationType(),
                               destinationName, message,
                               amqpProducerManager.renderEventMessageHeaders(TemplateEngineFactory.getTemplateEngine(), eventMessage.getHeaders()));
+                     }
+                     break;
+                 case SQS:
+                     for (EventMessage eventMessage : definition.getEventMessages()) {
+                       String topic = sqsProducerManager.getTopicName(definition, eventMessage);
+                       String message = renderEventMessageContent(eventMessage);
+                       sqsProducerManager.publishMessage(topic, message);
                      }
                      break;
                   default:
